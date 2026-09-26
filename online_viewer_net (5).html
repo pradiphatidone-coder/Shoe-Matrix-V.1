@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RunRepeat 5 Core Brands Shoe Matrix</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Prompt', sans-serif; }
+    .matrix-bg {
+      background-image: 
+        linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-3 md:p-6">
+
+  <!-- Header Section -->
+  <header class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-4 gap-4">
+    <div>
+      <div class="flex items-center gap-2">
+        <span class="text-xs px-2.5 py-0.5 rounded bg-orange-500/20 text-orange-400 font-semibold border border-orange-500/30">RUNREPEAT LAB MATRIX</span>
+        <span id="totalBadge" class="text-xs text-slate-400">ฐานข้อมูล 5 แบรนด์หลัก รวม 62 รุ่น</span>
+      </div>
+      <h1 class="text-2xl md:text-3xl font-extrabold text-white mt-1">
+        Shoe Matrix: 5 Core Brands
+      </h1>
+      <p class="text-xs md:text-sm text-slate-400">
+        แกน X: Shock Absorption Heel (SA) vs แกน Y: Energy Return Forefoot (ER%)
+      </p>
+    </div>
+
+    <!-- Search Input -->
+    <div class="flex items-center gap-2">
+      <input id="searchInput" type="text" placeholder="🔍 ค้นหาชื่อรุ่น (เช่น Boston, Metaspeed, Vaporfly)..." 
+             class="bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 w-64 md:w-80 shadow-inner">
+      <button id="clearSearchBtn" class="text-xs px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+        รีเซ็ต
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Grid -->
+  <main class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- Left Column: Matrix Chart (7 Cols) -->
+    <section class="lg:col-span-7 bg-slate-900/90 border border-slate-800 rounded-2xl p-4 md:p-5 shadow-2xl flex flex-col justify-between">
+      
+      <!-- Top Chart Toolbar -->
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <div class="text-xs text-slate-400 font-medium">
+          เส้นประสีส้ม = ค่าเฉลี่ยกลางของโฟม (Median 5.0)
+        </div>
+        <div class="text-[11px] text-slate-500">
+          * คลิกที่จุดหรือปุ่มแบรนด์เพื่อดูรายละเอียด
+        </div>
+      </div>
+
+      <!-- Canvas Wrapper -->
+      <div class="relative flex-1 min-h-[480px] w-full bg-slate-950 rounded-xl p-2 border border-slate-800 matrix-bg overflow-hidden">
+        <canvas id="shoeScatterChart"></canvas>
+      </div>
+
+      <!-- 4 Quadrant Explanations -->
+      <div class="grid grid-cols-2 gap-2 mt-4 text-[11px] text-slate-300 border-t border-slate-800/80 pt-3">
+        <div class="bg-indigo-950/20 p-2.5 rounded-lg border border-indigo-900/40">
+          <span class="font-bold text-indigo-300 block">↖ Top-Left (Low SA / High ER)</span>
+          <span class="text-slate-400">เน้นทำความเร็ว น้ำหนักเบา เร่งรอบขา คืนพลังงานดีดพุ่ง (Speed/Tempo/Track)</span>
+        </div>
+        <div class="bg-emerald-950/20 p-2.5 rounded-lg border border-emerald-900/40">
+          <span class="font-bold text-emerald-300 block">↗ Top-Right (High SA / High ER)</span>
+          <span class="text-slate-400">Super Shoes & Super Trainers โฟมหนาซับแรงเยี่ยมพร้อมสปริงดีดส่งตัว</span>
+        </div>
+        <div class="bg-rose-950/20 p-2.5 rounded-lg border border-rose-900/40">
+          <span class="font-bold text-rose-300 block">↙ Bottom-Left (Low SA / Low ER)</span>
+          <span class="text-slate-400">สัมผัสดิบแน่น มั่นคง คอนโทรลแรงกระทำจากเท้าเอง เหมาะกับงานเวท/ระนาบต่ำ</span>
+        </div>
+        <div class="bg-amber-950/20 p-2.5 rounded-lg border border-amber-900/40">
+          <span class="font-bold text-amber-300 block">↘ Bottom-Right (High SA / Low ER)</span>
+          <span class="text-slate-400">Max Cushion ดูดซับแรงสูงสุด คืนตัวต่ำ เซฟข้อต่อและเอ็นร้อยหวายวันล้าสะสม</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: Filters & Inspector Panel (5 Cols) -->
+    <section class="lg:col-span-5 flex flex-col gap-4">
+
+      <!-- Brand Filter Tags -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">เลือกกรองตามแบรนด์ (Brand Filters)</h2>
+        <div class="flex flex-wrap gap-1.5" id="brandToggles">
+          <button data-brand="all" class="brand-btn active px-3 py-1 rounded-lg text-xs font-semibold bg-white text-slate-950 transition">ทั้งหมด (62)</button>
+          <button data-brand="Nike" class="brand-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 text-rose-400 hover:bg-slate-700 transition">Nike (13)</button>
+          <button data-brand="ASICS" class="brand-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 text-blue-400 hover:bg-slate-700 transition">ASICS (15)</button>
+          <button data-brand="New Balance" class="brand-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 text-pink-400 hover:bg-slate-700 transition">New Balance (11)</button>
+          <button data-brand="HOKA" class="brand-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 text-amber-400 hover:bg-slate-700 transition">HOKA (12)</button>
+          <button data-brand="Adidas" class="brand-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 text-cyan-400 hover:bg-slate-700 transition">Adidas (11)</button>
+        </div>
+      </div>
+
+      <!-- Shoe Detail Inspector Card -->
+      <div id="inspectorCard" class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-2xl flex-1 flex flex-col justify-between">
+        <div>
+          <!-- Title & Badges -->
+          <div class="flex items-start justify-between gap-2 border-b border-slate-800 pb-3">
+            <div>
+              <div class="flex items-center gap-1.5">
+                <span class="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
+                  RunRepeat Lab Test
+                </span>
+                <span id="cardBrandPill" class="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                  ASICS
+                </span>
+              </div>
+              <h2 id="cardTitle" class="text-xl font-extrabold text-white mt-1.5">ASICS Metaspeed Ray</h2>
+              <p id="cardSub" class="text-xs text-slate-400 font-medium mt-0.5">Ultimate Super Shoe</p>
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] text-slate-500 block">ตำแหน่ง RunRepeat</span>
+              <span id="cardQuadrant" class="text-xs font-bold text-emerald-400">High SA / High ER</span>
+            </div>
+          </div>
+
+          <!-- Lab Coordinate Badges -->
+          <div class="grid grid-cols-2 gap-2 my-4">
+            <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+              <div class="text-[11px] text-slate-400">Shock Absorption Heel (SA)</div>
+              <div id="cardSA" class="text-lg font-black text-amber-400">9.0 <span class="text-xs font-normal text-slate-500">/ 10</span></div>
+              <div class="text-[10px] text-slate-500 mt-0.5">การซับแรงกระแทกส้นเท้า</div>
+            </div>
+            <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+              <div class="text-[11px] text-slate-400">Energy Return Forefoot (ER)</div>
+              <div id="cardER" class="text-lg font-black text-indigo-400">8.2 <span class="text-xs font-normal text-slate-500">/ 10</span></div>
+              <div class="text-[10px] text-slate-500 mt-0.5">แรงดีดสะท้อนหน้าเท้า</div>
+            </div>
+          </div>
+
+          <!-- Role & Biomechanics Description -->
+          <div class="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80 text-xs space-y-2">
+            <div>
+              <span class="text-slate-400 font-semibold">🎯 รูปแบบการใช้งาน:</span>
+              <span id="cardRole" class="text-orange-300 font-bold ml-1">Ultimate Super Shoe</span>
+            </div>
+            <div>
+              <span class="text-slate-400 font-semibold">⚙️ คุณลักษณะทางวิศวกรรมโฟม:</span>
+              <p id="cardDesc" class="text-slate-300 mt-0.5 leading-relaxed">
+                รุ่นท็อปดีดสะท้อนสูงสุด พร้อมการซับแรงส้นเท้าระดับพรีเมียม ตอบสนองฉับไวและคืนแรงส่งตัวสูงมาก
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-[11px] text-slate-500 text-center border-t border-slate-800 pt-3 mt-4">
+          * คลิกที่จุดบนกราฟ หรือพิมพ์ค้นหาชื่อรุ่นเพื่อดูสเปกของคู่อื่น
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <script>
+    // Master Database (62 Shoes from Official RunRepeat Charts of 5 Core Brands)
+    const shoeDatabase = [
+      // === 🔵 ASICS (15 รุ่น) ===
+      { name: "ASICS Metaspeed Ray", brand: "ASICS", group: "ASICS", sa: 9.0, er: 8.2, role: "Ultimate Super Shoe", desc: "รุ่นท็อปดีดสะท้อนสูงสุด พร้อมการซับแรงส้นเท้าระดับพรีเมียม" },
+      { name: "ASICS Metaspeed Sky Tokyo", brand: "ASICS", group: "ASICS", sa: 6.2, er: 7.3, role: "Stride Racer", desc: "คาร์บอนตัวแข่งสำหรับนักวิ่งสายก้าวยาว คืนแรงเด้งสูง" },
+      { name: "ASICS Metaspeed Edge Tokyo", brand: "ASICS", group: "ASICS", sa: 5.8, er: 6.7, role: "Cadence Racer", desc: "คาร์บอนสำหรับสายซอยรอบขา พลิกเท้าไว คุมเพซคงที่" },
+      { name: "ASICS Megablast", brand: "ASICS", group: "ASICS", sa: 7.8, er: 6.4, role: "Super Trainer Max", desc: "โฟมเด้งทรงพลัง หนาแต่น้ำหนักเบา ซ้อมสนุก" },
+      { name: "ASICS Novablast 6", brand: "ASICS", group: "ASICS", sa: 5.0, er: 5.9, role: "Bounce Daily", desc: "รุ่นต่อยอดความเด้ง แทรมโพลีนทรงสปริง สนุกสนาน" },
+      { name: "ASICS Sonicblast", brand: "ASICS", group: "ASICS", sa: 6.3, er: 5.8, role: "Speed Trainer", desc: "โฟมสปีดตอบสนองไว ช่วยพยุงการเร่งความเร็วต่อเนื่อง" },
+      { name: "ASICS GT 2000 15", brand: "ASICS", group: "ASICS", sa: 4.7, er: 5.3, role: "Stability Daily", desc: "สายซัพพอร์ตประคองเท้าเบา มั่นคง สบายใจทุกก้าว" },
+      { name: "ASICS Superblast 3", brand: "ASICS", group: "ASICS", sa: 7.4, er: 5.3, role: "Long Run Master", desc: "ซูเปอร์เทรนเนอร์วิ่งยาว โฟม Turbo ซับแรงดีดเยี่ยมโดยไร้แผ่นเพลท" },
+      { name: "ASICS Magic Speed 5", brand: "ASICS", group: "ASICS", sa: 6.4, er: 4.8, role: "Tempo Carbon", desc: "มีแผ่นคาร์บอน สัมผัสแน่น ช่วยดันเพซวันซ้อมคอร์ด" },
+      { name: "ASICS Glideride Max 2", brand: "ASICS", group: "ASICS", sa: 4.4, er: 4.4, role: "Rocker Long Run", desc: "หน้างอนชัดเจน กลิ้งเท้าประหยัดแรงข้อเท้าและน่อง" },
+      { name: "ASICS Gel Kayano 33", brand: "ASICS", group: "ASICS", sa: 3.3, er: 3.8, role: "Max Stability", desc: "ระบบ 4D Guidance ประคองเท้าล้มระดับท็อป มั่นคงสูงสุด" },
+      { name: "ASICS Gel Pulse 17", brand: "ASICS", group: "ASICS", sa: 3.5, er: 3.2, role: "Entry Cushion", desc: "รุ่นมาตรฐาน นุ่มแน่น คุ้มค่า ซ้อมง่าย" },
+      { name: "ASICS Gel Cumulus 28", brand: "ASICS", group: "ASICS", sa: 4.3, er: 2.8, role: "Neutral Daily", desc: "นุ่มสบาย นุ่มนวล เหมาะกับการวิ่งสะสมกิโลเมตรสบายๆ" },
+      { name: "ASICS GT 1000 15", brand: "ASICS", group: "ASICS", sa: 1.9, er: 2.3, role: "Budget Support", desc: "พื้นเฟิร์ม มั่นคง คุมการบิดข้อเท้าในราคาเป็นมิตร" },
+      { name: "ASICS Gel Nimbus 28", brand: "ASICS", group: "ASICS", sa: 4.3, er: 2.1, role: "Pure Max Cushion", desc: "เบาะนวมหนาสูงสุด ซับแรงตกกระทบได้นุ่มลึก" },
+
+      // === 🔴 NIKE (13 รุ่น) ===
+      { name: "Nike Streakfly 2", brand: "Nike", group: "Nike", sa: 2.5, er: 8.0, role: "5K/10K Speed Day", desc: "รองเท้าแข่งระยะสั้น น้ำหนักเบามาก สัมผัสดินดี ดีดสปริงสูง" },
+      { name: "Nike Vaporfly 4", brand: "Nike", group: "Nike", sa: 4.2, er: 7.2, role: "Marathon Racer", desc: "รองเท้าคาร์บอนแข่งระยะมาราธอน คืนแรงดีดระดับแถวหน้า" },
+      { name: "Nike Alphafly 3", brand: "Nike", group: "Nike", sa: 5.4, er: 6.9, role: "Marathon Super Shoe", desc: "แอร์พ็อดคู่ + แผ่นคาร์บอน ซับแรงส้นดีดส่งหน้าเท้าทรงพลัง" },
+      { name: "Nike Vomero Plus", brand: "Nike", group: "Nike", sa: 5.8, er: 5.5, role: "Max Stack Cruiser", desc: "โฟม ZoomX หนาเตอะ นุ่มยวบลึก นั่งสบายเท้า" },
+      { name: "Nike Zoom Fly 6", brand: "Nike", group: "Nike", sa: 5.5, er: 4.7, role: "Tempo Trainer", desc: "เทรนเนอร์มีแผ่นคาร์บอน แน่นกระชับ ซ้อมวิ่งเร็วต่อเนื่อง" },
+      { name: "Nike Pegasus Premium", brand: "Nike", group: "Nike", sa: 7.2, er: 5.2, role: "Max Bounce Daily", desc: "ชิ้นแอร์ซูมโค้งเต็มผืน นุ่มซับแรงกระแทกส้นเท้าสูงมาก" },
+      { name: "Nike Structure Plus", brand: "Nike", group: "Nike", sa: 4.8, er: 4.2, role: "Stability Daily", desc: "สายมั่นคงป้องกันเท้าล้ม สัมผัสกลางๆ ปลอดภัย" },
+      { name: "Nike Vomero Premium", brand: "Nike", group: "Nike", sa: 8.5, er: 3.5, role: "Max Comfort Cruise", desc: "หนานุ่มพิเศษ ซับแรงส้นเท้าสูงสุด ลดภาระข้อต่อ" },
+      { name: "Nike Winflo 12", brand: "Nike", group: "Nike", sa: 5.1, er: 2.9, role: "Daily Budget", desc: "รองเท้าซ้อมประจำวันราคาประหยัด สัมผัสแน่นแบบดั้งเดิม" },
+      { name: "Nike Pegasus 42", brand: "Nike", group: "Nike", sa: 4.2, er: 2.5, role: "Daily Workhorse", desc: "ม้าศึกซ้อมประจำวัน ทนทาน กระชับ รองรับทุกการวิ่ง" },
+      { name: "Nike Vomero 18", brand: "Nike", group: "Nike", sa: 6.3, er: 2.4, role: "Easy Cushion", desc: "โฟมสองชั้นหนานุ่ม ซับแรงกระแทกส้นเท้าดี คืนตัวนุ่มนวล" },
+      { name: "Nike Revolution 8", brand: "Nike", group: "Nike", sa: 2.8, er: 2.1, role: "Entry Run / Gym", desc: "รุ่นเริ่มต้น พื้นแน่น แบน เหมาะกับการใส่เวทและวิ่งเบา" },
+      { name: "Nike Structure 26", brand: "Nike", group: "Nike", sa: 4.6, er: 2.0, role: "Support Trainer", desc: "โฟมแน่นเฟิร์ม เน้นประคองแนวกระดูกข้อเท้าไม่ให้บิด" },
+
+      // === 🌸 NEW BALANCE (11 รุ่น) ===
+      { name: "NB SC Elite v6", brand: "New Balance", group: "New Balance", sa: 6.1, er: 8.3, role: "Marathon Racer", desc: "คาร์บอนตัวแข่งมาราธอน โฟม FuelCell เด้งนุ่มสปริงตัวยอดเยี่ยม" },
+      { name: "NB SC Rebel", brand: "New Balance", group: "New Balance", sa: 8.2, er: 7.9, role: "Super Responsive", desc: "ซับแรงส้นเท้าเยี่ยมพร้อมความดีดเด้งตอบสนองขั้นสุด" },
+      { name: "NB Ellipse", brand: "New Balance", group: "New Balance", sa: 5.8, er: 6.6, role: "Fast Trainer", desc: "โมเดลใหม่น้ำหนักเบา รีดรอบขาได้ดี" },
+      { name: "NB 1080 v15", brand: "New Balance", group: "New Balance", sa: 6.2, er: 5.9, role: "Premium Daily", desc: "โฟม Fresh Foam X หนา นุ่มละมุน เบาสบายเท้า" },
+      { name: "NB SC Trainer v3", brand: "New Balance", group: "New Balance", sa: 5.4, er: 4.7, role: "Plated Trainer", desc: "เทรนเนอร์มีแผ่นคาร์บอน โฟมนุ่มหนา วิ่งยาวสบาย" },
+      { name: "NB 860 v15", brand: "New Balance", group: "New Balance", sa: 4.4, er: 4.9, role: "Stability Daily", desc: "ประคองข้อเท้าด้านใน ฐานมั่นคง ป้องกันเท้าล้ม" },
+      { name: "NB More v6", brand: "New Balance", group: "New Balance", sa: 6.8, er: 3.2, role: "Max Cushion", desc: "หนาเตอะ นุ่มดูดซับแรงดีเยี่ยม ฟีลลิ่งเบาะโซฟา" },
+      { name: "NB 880 v15", brand: "New Balance", group: "New Balance", sa: 3.4, er: 3.4, role: "Classic Neutral", desc: "โฟมสองชั้น แน่นเฟิร์ม ควบคุมง่าย ทนทาน" },
+      { name: "NB 680 v9", brand: "New Balance", group: "New Balance", sa: 3.7, er: 3.9, role: "Entry Trainer", desc: "รุ่นเริ่มต้นสำหรับการวิ่งเพื่อสุขภาพและเวทเทรนนิ่ง" },
+      { name: "NB Evoz v4", brand: "New Balance", group: "New Balance", sa: 1.7, er: 3.8, role: "Firm Daily", desc: "พื้นกระชับ แน่น ควบคุมจังหวะเท้าได้เอง" },
+      { name: "NB Vongo v6", brand: "New Balance", group: "New Balance", sa: 2.1, er: 2.3, role: "Plush Stability", desc: "เสริมความมั่นคงด้วยโครงสร้าง EVA Plate ด้านใน" },
+
+      // === 🟡 HOKA (12 รุ่น) ===
+      { name: "HOKA Rocket X 3", brand: "HOKA", group: "HOKA", sa: 6.9, er: 8.4, role: "Carbon Racer", desc: "คาร์บอนตัวท็อป โฟม PEBA เด้งพุ่ง คืนพลังงานมหาศาล" },
+      { name: "HOKA Cielo X1 3.0", brand: "HOKA", group: "HOKA", sa: 8.5, er: 7.2, role: "Super Bounce Racer", desc: "ร็อกเกอร์เชิดจัด โฟมหนานุ่มเด้ง ซับแรงส้นสูงสุดในสายแข่ง" },
+      { name: "HOKA Mach X 3", brand: "HOKA", group: "HOKA", sa: 6.1, er: 6.1, role: "Pebax Trainer", desc: "แผ่น Pebax ช่วยส่งตัว ซ้อมเทมโป้และวิ่งยาวได้ดีเยี่ยม" },
+      { name: "HOKA Skyward X 2", brand: "HOKA", group: "HOKA", sa: 6.3, er: 5.6, role: "Super Stack Trainer", desc: "โฟมหนาลอยฟ้าพร้อมแผ่นคาร์บอนนูน ซับแรงและดีดลอยตัว" },
+      { name: "HOKA Mach 7", brand: "HOKA", group: "HOKA", sa: 4.1, er: 5.2, role: "Lightweight Tempo", desc: "เบา พริ้ว ไม่มีแผ่น ตอบสนองตามแรงเท้า เหมาะกับวันสปีด" },
+      { name: "HOKA Bondi 9", brand: "HOKA", group: "HOKA", sa: 5.7, er: 4.2, role: "Ultimate Cushion", desc: "ราชาแห่งความนุ่มหนา ซับแรงกระแทกทุกก้าวเพื่อการฟื้นฟู" },
+      { name: "HOKA Clifton PRO", brand: "HOKA", group: "HOKA", sa: 5.4, er: 3.7, role: "Upgraded Daily", desc: "ปรับปรุงโฟมให้เด้งและเบาขึ้นจากรุ่นมาตรฐาน" },
+      { name: "HOKA Rincon 4", brand: "HOKA", group: "HOKA", sa: 3.8, er: 3.6, role: "Featherweight", desc: "เบาคล่องตัว สัมผัสแน่นขึ้น พาเท้าหมุนรอบได้เร็ว" },
+      { name: "HOKA Arahi 9", brand: "HOKA", group: "HOKA", sa: 4.3, er: 2.9, role: "J-Frame Support", desc: "ป้องกันเท้าล้มด้วยเฟรมรูปตัว J มั่นคงไม่ยวบ" },
+      { name: "HOKA Carbon X 3", brand: "HOKA", group: "HOKA", sa: 2.0, er: 2.6, role: "Endurance Carbon", desc: "แผ่นคาร์บอนสายวิ่งระยะไกลพิเศษ สัมผัสแน่น เฟิร์ม" },
+      { name: "HOKA Gaviota 6", brand: "HOKA", group: "HOKA", sa: 2.8, er: 2.1, role: "Max Stability", desc: "ซัพพอร์ตสูงสุดสำหรับคนเท้าแบน ฐานกว้างมาก" },
+      { name: "HOKA Clifton 11", brand: "HOKA", group: "HOKA", sa: 5.6, er: 1.8, role: "Everyday Balance", desc: "นุ่ม สมดุล เบาสบาย ใช้งานได้ตั้งแต่วิ่งช้าถึงฟื้นฟู" },
+
+      // === 💎 ADIDAS (11 รุ่น) ===
+      { name: "Adizero Adios Pro Evo 3", brand: "Adidas", group: "Adidas", sa: 6.4, er: 9.3, role: "Marathon World Record Shoe", desc: "รองเท้าคาร์บอนแข่งขันระดับท็อปสุด เบาเป็นประวัติการณ์ โฟม Lightstrike Pro คืนพลังงานดีดพุ่งสูงสุด" },
+      { name: "Adizero Adios Pro 4", brand: "Adidas", group: "Adidas", sa: 5.8, er: 8.8, role: "Marathon Racer", desc: "EnergyRods คาร์บอนเต็มผืน โฟมหนานุ่มเด้ง คืนพลังงานมหาศาลสำหรับล่าสถิติระยะมาราธอน" },
+      { name: "Adizero Prime X3 STRUNG", brand: "Adidas", group: "Adidas", sa: 8.2, er: 8.5, role: "Super Stack Monster", desc: "โฟม 3 ชั้นเกินมาตรฐาน 50 มม. ซับแรงส้นเท้ามหาศาลพร้อมแผ่นคาร์บอนสองชั้น สปริงตัวลอยฟ้า" },
+      { name: "Adizero Boston 13", brand: "Adidas", group: "Adidas", sa: 4.8, er: 7.4, role: "Tempo / Fast Cruiser", desc: "โฟมสองชั้นพร้อมแท่ง EnergyRods สัมผัสแน่นเฟิร์ม ดีดส่งรอบขาได้ต่อเนื่อง ทนทานสูง" },
+      { name: "Adizero Evo SL", brand: "Adidas", group: "Adidas", sa: 5.2, er: 7.6, role: "Speed Super Trainer", desc: "น้ำหนักเบา โฟม Lightstrike Pro ไร้แผ่นเพลท นุ่มเด้งเป็นธรรมชาติ คล่องตัวสูงมาก" },
+      { name: "Adizero SL2", brand: "Adidas", group: "Adidas", sa: 4.5, er: 6.0, role: "Daily Speed Workhorse", desc: "เสริมแกนโฟม Lightstrike Pro ด้านใน แน่นกระชับ ซ้อมรอบขาและทำความเร็วประจำวันได้ดี" },
+      { name: "Ultraboost 5X", brand: "Adidas", group: "Adidas", sa: 6.8, er: 4.6, role: "Comfort Cruiser", desc: "โฟม Light Boost น้ำหนักเบาลง ซับแรงกระแทกส้นเท้าได้นุ่มนวล มั่นคง ใส่สบายเท้า" },
+      { name: "Hyperboost Edge", brand: "Adidas", group: "Adidas", sa: 5.5, er: 3.8, role: "Daily Walking & Running", desc: "โฟมนุ่มสบาย รองรับการลงน้ำหนักที่สมดุล เหมาะกับการวิ่งเพื่อสุขภาพ" },
+      { name: "Supernova Rise 3", brand: "Adidas", group: "Adidas", sa: 6.6, er: 4.2, role: "Daily Comfort Cushion", desc: "โฟม Dreamstrike+ ซับแรงส้นเท้านุ่มนวล ถ่ายน้ำหนักไหลลื่น สบายเท้าตลอดการวิ่ง" },
+      { name: "Duramo Speed 2", brand: "Adidas", group: "Adidas", sa: 3.2, er: 4.8, role: "Budget Fast Trainer", desc: "พื้นแน่น เฟิร์ม น้ำหนักเบา ควบคุมจังหวะเท้าได้เอง สำหรับนักวิ่งที่ชอบความมั่นคง" },
+      { name: "Runfalcon 5", brand: "Adidas", group: "Adidas", sa: 2.6, er: 2.3, role: "Entry Daily / Gym", desc: "รุ่นเริ่มต้น พื้นแน่น แบน แข็งแรง ทนทาน เหมาะกับการใส่เวทและวิ่งเบา" }
+    ];
+
+    let chartInstance = null;
+    let selectedBrandFilter = "all";
+    let highlightedShoe = null;
+
+    // Inspect Shoe Details in Right Card
+    function inspectShoe(shoe) {
+      document.getElementById('cardTitle').innerText = shoe.name;
+      document.getElementById('cardSub').innerText = `${shoe.brand} | ${shoe.role}`;
+      document.getElementById('cardBrandPill').innerText = shoe.brand;
+      
+      // Update Brand Pill Style
+      const pill = document.getElementById('cardBrandPill');
+      if (shoe.brand === 'Nike') pill.className = "text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30";
+      else if (shoe.brand === 'ASICS') pill.className = "text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30";
+      else if (shoe.brand === 'New Balance') pill.className = "text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-pink-500/20 text-pink-400 border border-pink-500/30";
+      else if (shoe.brand === 'HOKA') pill.className = "text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30";
+      else if (shoe.brand === 'Adidas') pill.className = "text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30";
+
+      document.getElementById('cardSA').innerHTML = `${shoe.sa.toFixed(1)} <span class="text-xs font-normal text-slate-500">/ 10</span>`;
+      document.getElementById('cardER').innerHTML = `${shoe.er.toFixed(1)} <span class="text-xs font-normal text-slate-500">/ 10</span>`;
+      document.getElementById('cardRole').innerText = shoe.role;
+      document.getElementById('cardDesc').innerText = shoe.desc;
+
+      // Determine Quadrant
+      const xMid = 5.0, yMid = 5.0;
+      let quadText = "";
+      let quadColor = "";
+      if (shoe.sa >= xMid && shoe.er >= yMid) {
+        quadText = "Top-Right (High SA / High ER)";
+        quadColor = "text-emerald-400";
+      } else if (shoe.sa < xMid && shoe.er >= yMid) {
+        quadText = "Top-Left (Low SA / High ER)";
+        quadColor = "text-indigo-400";
+      } else if (shoe.sa >= xMid && shoe.er < yMid) {
+        quadText = "Bottom-Right (High SA / Low ER)";
+        quadColor = "text-amber-400";
+      } else {
+        quadText = "Bottom-Left (Low SA / Low ER)";
+        quadColor = "text-rose-400";
+      }
+      const qEl = document.getElementById('cardQuadrant');
+      qEl.innerText = quadText;
+      qEl.className = `text-xs font-bold ${quadColor}`;
+    }
+
+    // Initialize Chart.js
+    function initChart() {
+      const ctx = document.getElementById('shoeScatterChart').getContext('2d');
+
+      const datasets = [
+        {
+          label: 'Nike',
+          brandKey: 'Nike',
+          data: shoeDatabase.filter(s => s.group === 'Nike').map(s => ({ x: s.sa, y: s.er, raw: s })),
+          backgroundColor: 'rgba(239, 68, 68, 0.8)', // แดง
+          borderColor: '#ef4444',
+          borderWidth: 1.5,
+          pointRadius: ctx => (highlightedShoe === ctx.raw?.raw?.name ? 13 : 6.5),
+          pointHoverRadius: 9.5
+        },
+        {
+          label: 'ASICS',
+          brandKey: 'ASICS',
+          data: shoeDatabase.filter(s => s.group === 'ASICS').map(s => ({ x: s.sa, y: s.er, raw: s })),
+          backgroundColor: 'rgba(59, 130, 246, 0.8)', // น้ำเงิน
+          borderColor: '#3b82f6',
+          borderWidth: 1.5,
+          pointRadius: ctx => (highlightedShoe === ctx.raw?.raw?.name ? 13 : 6.5),
+          pointHoverRadius: 9.5
+        },
+        {
+          label: 'New Balance',
+          brandKey: 'New Balance',
+          data: shoeDatabase.filter(s => s.group === 'New Balance').map(s => ({ x: s.sa, y: s.er, raw: s })),
+          backgroundColor: 'rgba(236, 72, 153, 0.8)', // ชมพู
+          borderColor: '#ec4899',
+          borderWidth: 1.5,
+          pointRadius: ctx => (highlightedShoe === ctx.raw?.raw?.name ? 13 : 6.5),
+          pointHoverRadius: 9.5
+        },
+        {
+          label: 'HOKA',
+          brandKey: 'HOKA',
+          data: shoeDatabase.filter(s => s.group === 'HOKA').map(s => ({ x: s.sa, y: s.er, raw: s })),
+          backgroundColor: 'rgba(245, 158, 11, 0.8)', // ส้มทอง
+          borderColor: '#f59e0b',
+          borderWidth: 1.5,
+          pointRadius: ctx => (highlightedShoe === ctx.raw?.raw?.name ? 13 : 6.5),
+          pointHoverRadius: 9.5
+        },
+        {
+          label: 'Adidas',
+          brandKey: 'Adidas',
+          data: shoeDatabase.filter(s => s.group === 'Adidas').map(s => ({ x: s.sa, y: s.er, raw: s })),
+          backgroundColor: 'rgba(6, 182, 212, 0.85)', // ฟ้า Cyan
+          borderColor: '#06b6d4',
+          borderWidth: 1.5,
+          pointRadius: ctx => (highlightedShoe === ctx.raw?.raw?.name ? 13 : 6.5),
+          pointHoverRadius: 9.5
+        }
+      ];
+
+      // Custom Center Crosshair Plugin (Median 5.0 Line)
+      const centerCrosshairPlugin = {
+        id: 'centerCrosshair',
+        beforeDraw: (chart) => {
+          const { ctx, chartArea: { top, bottom, left, right }, scales: { x, y } } = chart;
+          const xCenter = x.getPixelForValue(5.0);
+          const yCenter = y.getPixelForValue(5.0);
+
+          ctx.save();
+          ctx.strokeStyle = 'rgba(249, 115, 22, 0.75)'; // ส้มกึ่งกลาง
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([4, 4]);
+
+          // เส้นแนวตั้ง
+          ctx.beginPath();
+          ctx.moveTo(xCenter, top);
+          ctx.lineTo(xCenter, bottom);
+          ctx.stroke();
+
+          // เส้นแนวนอน
+          ctx.beginPath();
+          ctx.moveTo(left, yCenter);
+          ctx.lineTo(right, yCenter);
+          ctx.stroke();
+
+          ctx.restore();
+        }
+      };
+
+      chartInstance = new Chart(ctx, {
+        type: 'scatter',
+        data: { datasets },
+        plugins: [centerCrosshairPlugin],
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 250 },
+          scales: {
+            x: {
+              min: 1.0,
+              max: 9.8,
+              title: {
+                display: true,
+                text: 'Shock Absorption Heel (SA) ➔ (ยิ่งขวายิ่งซับแรงส้นเท้าสูง)',
+                color: '#f97316',
+                font: { family: 'Prompt', size: 11, weight: 'bold' }
+              },
+              grid: { color: 'rgba(51, 65, 85, 0.25)' },
+              ticks: { color: '#64748b' }
+            },
+            y: {
+              min: 1.0,
+              max: 9.8,
+              title: {
+                display: true,
+                text: 'Energy Return Forefoot (ER%) ➔ (ยิ่งสูงยิ่งดีดสะท้อนคืนพลังงานหน้าเท้า)',
+                color: '#f97316',
+                font: { family: 'Prompt', size: 11, weight: 'bold' }
+              },
+              grid: { color: 'rgba(51, 65, 85, 0.25)' },
+              ticks: { color: '#64748b' }
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: { color: '#cbd5e1', font: { family: 'Prompt', size: 11 }, usePointStyle: true }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(15, 23, 42, 0.95)',
+              titleColor: '#f97316',
+              bodyColor: '#f8fafc',
+              borderColor: '#334155',
+              borderWidth: 1,
+              padding: 10,
+              callbacks: {
+                title: (items) => items[0].raw.raw.name,
+                label: (item) => {
+                  const s = item.raw.raw;
+                  return [
+                    `แบรนด์: ${s.brand}`,
+                    `หมวด: ${s.role}`,
+                    `Shock Absorption: ${s.sa.toFixed(1)} / 10`,
+                    `Energy Return: ${s.er.toFixed(1)} / 10`
+                  ];
+                }
+              }
+            }
+          },
+          onClick: (e, elements) => {
+            if (elements.length > 0) {
+              const el = elements[0];
+              const shoe = chartInstance.data.datasets[el.datasetIndex].data[el.index].raw;
+              highlightedShoe = shoe.name;
+              inspectShoe(shoe);
+              chartInstance.update();
+            }
+          }
+        }
+      });
+    }
+
+    // Filter Logic by Brand
+    function applyBrandFilter(filter) {
+      selectedBrandFilter = filter;
+
+      chartInstance.data.datasets.forEach(ds => {
+        if (filter === 'all') {
+          ds.hidden = false;
+        } else {
+          ds.hidden = (ds.brandKey !== filter);
+        }
+      });
+
+      chartInstance.update();
+
+      // Update counter badge
+      let visibleCount = 0;
+      chartInstance.data.datasets.forEach(ds => {
+        if (!ds.hidden) visibleCount += ds.data.length;
+      });
+      document.getElementById('totalBadge').innerText = `แสดงอยู่ ${visibleCount} จาก 62 รุ่น`;
+    }
+
+    // Setup Filter Button Click Events
+    document.querySelectorAll('.brand-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.brand-btn').forEach(b => {
+          b.classList.remove('bg-white', 'text-slate-950', 'font-semibold');
+          b.classList.add('bg-slate-800');
+        });
+        btn.classList.add('bg-white', 'text-slate-950', 'font-semibold');
+        btn.classList.remove('bg-slate-800');
+
+        applyBrandFilter(btn.dataset.brand);
+      });
+    });
+
+    // Search Box Functionality
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      if (!q) {
+        highlightedShoe = null;
+        chartInstance.update();
+        return;
+      }
+      const match = shoeDatabase.find(s => s.name.toLowerCase().includes(q));
+      if (match) {
+        highlightedShoe = match.name;
+        inspectShoe(match);
+        // If current brand filter hides this shoe, switch filter to all
+        if (selectedBrandFilter !== 'all' && selectedBrandFilter !== match.brand) {
+          applyBrandFilter('all');
+          document.querySelectorAll('.brand-btn').forEach(b => {
+            b.classList.remove('bg-white', 'text-slate-950', 'font-semibold');
+            b.classList.add('bg-slate-800');
+          });
+          const allBtn = document.querySelector('.brand-btn[data-brand="all"]');
+          allBtn.classList.add('bg-white', 'text-slate-950', 'font-semibold');
+          allBtn.classList.remove('bg-slate-800');
+        }
+        chartInstance.update();
+      }
+    });
+
+    document.getElementById('clearSearchBtn').addEventListener('click', () => {
+      document.getElementById('searchInput').value = "";
+      highlightedShoe = null;
+      applyBrandFilter('all');
+    });
+
+    window.onload = () => {
+      initChart();
+      inspectShoe(shoeDatabase[0]); // Default ASICS Metaspeed Ray
+    };
+  </script>
+</body>
+</html>
